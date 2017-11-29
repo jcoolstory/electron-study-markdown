@@ -7,12 +7,22 @@ function setAppMenu(options) {
             submenu : [
                 { label : "Open", accelerator: "CmdOrCtrl+O", click: () => 
                         options.openFile() },
-                { label : "Save", accelerator: "CmdOrCtrl+O", click: () => 
-                        options.openFile() },
-                { label : "Save as", accelerator: "CmdOrCtrl+O", click: () => 
-                        options.openFile() },
-                { label : "Export PDF ", accelerator: "CmdOrCtrl+O", click: () => 
-                        options.openFile() },
+                { label : "Save", accelerator: "CmdOrCtrl+S", click: () => 
+                        options.saveFile() },
+                { label : "Save as",  click: () => 
+                        options.saveAsNewFile() },
+                { label : "Export PDF ",  click: () => 
+                        options.exportPDF() },
+            ]
+        },
+        {
+            label : "View",
+            submenu : [
+                {
+                    label : "Toogle DevTools",
+                    accelerator : "Alt+Command+I",
+                    click : ()=> BrowserWindow.getFocusedWindow().toggleDevTools()
+                }
             ]
         }
     ];

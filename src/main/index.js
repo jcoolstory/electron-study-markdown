@@ -2,12 +2,17 @@ import {app} from "electron";
 import setAppMenu from "./setAppMenu";
 import createMainWindow from "./createMainWindow";
 import createFileManager from './createFileManager';
+import showSaveAsNewFileDialog from "./showSaveAsNewFileDialog"
+import showOpenFileDialog from "./showOpenFileDialog";
+import createPDFWindow from "./createPDFWindow";
+import showExportPDFDialog from "./showExportPDFDialog";
 
 let mainWindow = null;
 let fileManager = null;
 
 app.on("ready", ()=> {
     mainWindow = createMainWindow();
+    fileManager = fileManager || createFileManager();
     setAppMenu({ openFile, saveFile, saveAsNewFile, exportPDF});
 
 });
@@ -36,13 +41,46 @@ function saveAsNewFile() {
 }
 
 function openFile() {
-    console.log("openFile");
+    fileManager = fileManager || createFileManager();
+    showOpenFileDialog()
+        .then((filePath)=> fileManager.readFile(filePath))
+        .then((text) => mainWindow.sendText(text))
+        .catch((error) => {
+            console.log(error);
+        })
 }
 
 function saveFile() {
-    console.log("save");
+    if (!fileManager.filePath) {
+        saveAsNewFile();
+        return;
+    }
+    
+    mainWindow.requestText()
+        .then((text) => fileManager.overwriteFile(text))
+        .catch((error) => {
+            console.log(error);
+        })
 }
 
 function exportPDF() {
-    console.log("exportPDF");
+    Promise.all([ showExportPDFDialog(), mainWindow.requestText() ])
+        .then(([filePath, text]) => {
+            
+            const pdfWindow = createPDFWindow(text);
+            
+            pdfWindow.on("RENDERED_CONTENTS", ()=> {
+                pdfWindow.generatePDF()
+                    .then((pdf) => fileManager.writePdf(filePath, pdf))
+                    .then(() => pdfWindow.close())
+                    .catch((error) => {
+                        console.log(error);
+                        pdfWindow.close();
+                    });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+
 }
